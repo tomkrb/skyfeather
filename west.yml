@@ -6,12 +6,12 @@ manifest:
     west-commands: scripts/west-commands.yml
 
   remotes:
-    - name: zephyrproject-rtos
-      url-base: https://github.com/zephyrproject-rtos
+    - name: fork-zephyr 
+      url-base: https://github.com/tomkrb
 
   projects:
     - name: zephyr
-      remote: zephyrproject-rtos
+      remote: fork-zephyr
       revision: main
       import:
         # By using name-allowlist we can clone only the modules that are
