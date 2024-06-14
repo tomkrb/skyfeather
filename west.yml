@@ -10,9 +10,10 @@ manifest:
       url-base: https://github.com/tomkrb
 
   projects:
-    - name: zephyr
+    - name: fork-zephyr
       remote: fork-zephyr
       revision: main
+      path: zephyr
       import:
         # By using name-allowlist we can clone only the modules that are
         # strictly needed by the application.
