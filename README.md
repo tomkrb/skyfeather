@@ -1,3 +1,9 @@
+```shell
+west init -m git@github.com:tomkrb/skyfeather --mr main
+cd skyfeather
+west update
+```
+
 # Zephyr Example Application
  
 <a href="https://zephyrproject-rtos.github.io/example-application">
