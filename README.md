@@ -2,20 +2,21 @@
 west init -m git@github.com:tomkrb/skyfeather --mr main
 cd skyfeather
 west update
+
+west build -p always -b feather_v2/esp32/procpu hello_world  --  -DDTC_OVERLAY_FILE="/Users/tom/work/SkyFeather/skyfeather/skyfeather.overlay"
 ```
 
-# Zephyr Example Application
+# SkyFeather HW
  
-<a href="https://zephyrproject-rtos.github.io/example-application">
-  <img alt="Documentation" src="https://img.shields.io/badge/documentation-3D578C?logo=sphinx&logoColor=white">
-</a>
-<a href="https://zephyrproject-rtos.github.io/example-application/doxygen">
-  <img alt="API Documentation" src="https://img.shields.io/badge/API-documentation-3D578C?logo=c&logoColor=white">
-</a>
+<li>CPU: <a href="https://www.adafruit.com/product/5400">Adafruit ESP32 Feather V2</a> </li>
+<li>Display: <a href="https://www.adafruit.com/product/2900">Adafruit FeatherWing OLED - 128x32 OLED</a> </li>
+<li>Joystick: <a href="https://www.adafruit.com/product/3632">Adafruit Joy FeatherWing</a> </li>
+<li>Accelerometer: <a href="https://www.adafruit.com/product/4565">Adafruit LSM6DSOX + LIS3MDL FeatherWing - Precision 9-DoF IMU</a> </li>
+<li>Feather doubler: <a href="https://www.adafruit.com/product/2890">FeatherWing Doubler - Prototyping Add-on For All Feather Boards</a> </li>
+<li>Charger: <a href="https://www.adafruit.com/product/4410">Adafruit Micro-Lipo Charger for LiPoly Batt with USB Type C Jack
+</a> </li>
 
-This repository contains a Zephyr example application. The main purpose of this
-repository is to serve as a reference on how to structure Zephyr-based
-applications. Some of the features demonstrated in this example are:
+This repository contains a Zephyr application to control the 
 
 - Basic [Zephyr application][app_dev] skeleton
 - [Zephyr workspace applications][workspace_app]
