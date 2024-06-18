@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.20.0)
 set(SHIELD adafruit_2900_oled adafruit_4565_9dof_imu)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(hello_world)
+project(skyfeather)
 
 
 
