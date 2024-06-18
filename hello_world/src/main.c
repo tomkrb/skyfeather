@@ -61,7 +61,6 @@ int main(void)
 
 	struct sensor_value accel_xyz[3];
 
-
 	configure_button(&buttona);
 	configure_button(&buttonb);
 	configure_button(&buttonc);
@@ -69,11 +68,6 @@ int main(void)
 	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 	if (!device_is_ready(dev)) {
 		printf("Device %s not ready\n", dev->name);
-		return 0;
-	}
-
-	if (!device_is_ready(lsm6ds0)) {
-		printk("%s: device not ready.\n", lsm6ds0->name);
 		return 0;
 	}
 
@@ -94,6 +88,12 @@ int main(void)
 		printf("Framebuffer initialization failed!\n");
 		return 0;
 	}
+
+	if (!device_is_ready(lsm6ds0)) {
+		printk("%s: device not ready.\n", lsm6ds0->name);
+		// return 0;
+	}
+
 
 	cfb_framebuffer_clear(dev, true);
 
