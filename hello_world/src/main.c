@@ -15,6 +15,9 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/devicetree/gpio.h>
 
+/* accelerometer */
+#include <zephyr/drivers/sensor.h>
+
 /*
  * Get button configuration from the devicetree sw0 alias. This is mandatory.
  */
@@ -29,7 +32,7 @@ static const struct gpio_dt_spec buttona = GPIO_DT_SPEC_GET_OR(BTN_A_NODE, gpios
 static const struct gpio_dt_spec buttonb = GPIO_DT_SPEC_GET_OR(BTN_B_NODE, gpios, {0});
 static const struct gpio_dt_spec buttonc = GPIO_DT_SPEC_GET_OR(BTN_C_NODE, gpios, {0});
 
-static struct gpio_callback button_cb_data;
+const struct device *const lsm6ds0 = DEVICE_DT_GET_ONE(st_lsm6ds0);
 
 void configure_button(const struct gpio_dt_spec *button)
 {
@@ -56,6 +59,9 @@ int main(void)
 	uint8_t font_width;
 	uint8_t font_height;
 
+	struct sensor_value accel_xyz[3];
+
+
 	configure_button(&buttona);
 	configure_button(&buttonb);
 	configure_button(&buttonc);
@@ -63,6 +69,11 @@ int main(void)
 	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 	if (!device_is_ready(dev)) {
 		printf("Device %s not ready\n", dev->name);
+		return 0;
+	}
+
+	if (!device_is_ready(lsm6ds0)) {
+		printk("%s: device not ready.\n", lsm6ds0->name);
 		return 0;
 	}
 
@@ -116,6 +127,18 @@ int main(void)
 	cfb_set_kerning(dev, 3);
 
 	while (1) {
+		if (sensor_sample_fetch(lsm6ds0) < 0) {
+			printf("LSM6DS0 Sensor sample update error\n");
+			return 0;
+		}
+		sensor_channel_get(lsm6ds0, SENSOR_CHAN_ACCEL_XYZ, accel_xyz);
+
+		printf(
+		   "LSM6DS0: Acceleration (m.s-2): x: %.1f, y: %.1f, z: %.1f\n",
+		   sensor_value_to_double(&accel_xyz[0]),
+		   sensor_value_to_double(&accel_xyz[1]),
+		   sensor_value_to_double(&accel_xyz[2]));
+
 		int vala = gpio_pin_get_dt(&buttona);
 		int valb = gpio_pin_get_dt(&buttonb);
 		int valc = gpio_pin_get_dt(&buttonc);
