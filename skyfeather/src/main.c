@@ -49,27 +49,14 @@ void configure_button(const struct gpio_dt_spec *button)
 	printk("Success.  Configured %s pin %d\n", button->port->name, button->pin);
 }
 
-int main(void)
+int init_screen(const struct device *dev)
 {
-	const struct device *dev;
 	uint16_t x_res;
 	uint16_t y_res;
 	uint16_t rows;
 	uint8_t ppt;
 	uint8_t font_width;
 	uint8_t font_height;
-
-	struct sensor_value accel_xyz[3];
-
-	configure_button(&buttona);
-	configure_button(&buttonb);
-	configure_button(&buttonc);
-
-	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
-	if (!device_is_ready(dev)) {
-		printf("Device %s not ready\n", dev->name);
-		return 0;
-	}
 
 	if (display_set_pixel_format(dev, PIXEL_FORMAT_MONO10) != 0) {
 		if (display_set_pixel_format(dev, PIXEL_FORMAT_MONO01) != 0) {
@@ -87,11 +74,6 @@ int main(void)
 	if (cfb_framebuffer_init(dev)) {
 		printf("Framebuffer initialization failed!\n");
 		return 0;
-	}
-
-	if (!device_is_ready(lsm6ds0)) {
-		printk("%s: device not ready.\n", lsm6ds0->name);
-		// return 0;
 	}
 
 
@@ -122,9 +104,38 @@ int main(void)
 	       rows,
 	       cfb_get_display_parameter(dev, CFB_DISPLAY_COLS));
 
-	cfb_framebuffer_invert(dev);
+	// cfb_framebuffer_invert(dev);
 
-	cfb_set_kerning(dev, 3);
+	// cfb_set_kerning(dev, 3);
+
+	return 0;
+}
+
+void joy_feather(void)
+{}
+
+int main(void)
+{
+	const struct device *dev;
+	struct sensor_value accel_xyz[3];
+	char output_str[64];
+
+	configure_button(&buttona);
+	configure_button(&buttonb);
+	configure_button(&buttonc);
+
+	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+	if (!device_is_ready(dev)) {
+		printf("Device %s not ready\n", dev->name);
+		return 0;
+	}
+
+	init_screen(dev);
+
+	if (!device_is_ready(lsm6ds0)) {
+		printk("%s: device not ready.\n", lsm6ds0->name);
+		// return 0;
+	}
 
 	while (1) {
 		if (sensor_sample_fetch(lsm6ds0) < 0) {
@@ -139,31 +150,38 @@ int main(void)
 		   sensor_value_to_double(&accel_xyz[1]),
 		   sensor_value_to_double(&accel_xyz[2]));
 
+		snprintf(output_str, 63,
+		   "%4.1f %4.1f %4.1f        ",
+		   sensor_value_to_double(&accel_xyz[0]),
+		   sensor_value_to_double(&accel_xyz[1]),
+		   sensor_value_to_double(&accel_xyz[2]));
+
 		int vala = gpio_pin_get_dt(&buttona);
 		int valb = gpio_pin_get_dt(&buttonb);
 		int valc = gpio_pin_get_dt(&buttonc);
 
 		printf("read keys: %d %d %d\n", vala, valb, valc);
 
-		cfb_framebuffer_clear(dev, true);
-		char *str;
-		str = "HELLO";
-		if( vala) 
-			str = "AAAAA";
-		if( valb) 
-			str = "BBBBB";
-		if( valc) 
-			str = "CCCCC";
-		
-		if (cfb_print(dev, str, 0, 0)) {
+		char key_str[64];
+		snprintf(key_str, 63,
+		   "%c %c %c 	  ",
+		   vala ? 'A' : 'a',
+		   valb ? 'B' : 'b',
+		   valc ? 'C' : 'c');
+		   
+		// cfb_framebuffer_clear(dev, true);
+		if (cfb_print(dev, key_str, 0, 0)) {
 			printf("Failed to print a string\n");
 			continue;
 		}
+		if (cfb_print(dev, output_str, 0, 16)) {
+			printf("Failed to print a string\n");
+			continue;
+		}
+		
 		// printf("i = %d\n", i);
 		cfb_framebuffer_finalize(dev);
-#if defined(CONFIG_ARCH_POSIX)
-		k_sleep(K_MSEC(20));
-#endif
+		k_sleep(K_MSEC(50));
 	}
 	return 0;
 }
