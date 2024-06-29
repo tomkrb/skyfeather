@@ -18,6 +18,10 @@
 /* accelerometer */
 #include <zephyr/drivers/sensor.h>
 
+
+/* joystick */
+#include <zephyr/drivers/sensor/seesaw.h>
+
 /*
  * Get button configuration from the devicetree sw0 alias. This is mandatory.
  */
@@ -175,9 +179,34 @@ int main(void)
 	}
 
 	printf("Now just loopin'...\n");
-	seesaw_temperature_get(joy_feather);
+	#define USE(pin) do { \
+		seesaw_gpio_pin_set_output(joy_feather, pin); \
+		seesaw_gpio_pin_set(joy_feather, pin); \
+	} while (0)	
+	USE(6); // A
+	USE(7); // B
+	USE(9); // Y
+	USE(10); // X
+	USE(14); // Sel
 
+	#define PIN(name,pin) printf( "%s", seesaw_gpio_pin_get(joy_feather, pin) ? name : " " )
 	while (1) {
+		uint32_t buttons = seesaw_gpio_sample_fetch(joy_feather);
+		PIN("A", 6);
+		PIN("B", 7);
+		PIN("Y", 9);
+		PIN("X", 10);
+		PIN("S", 14);
+		printf("\t\t");
+
+
+		uint16_t val;
+		seesaw_adc_channel_read(joy_feather, 0, &val);
+		printf(" ADC 0: %04x\t", val);
+
+		seesaw_adc_channel_read(joy_feather, 1, &val);
+		printf(" ADC 1: %04x\r", val);
+		// k_sleep(K_MSEC(50));
 
 		// cfb_framebuffer_clear(display, true);
 		double acc_x, acc_y, acc_z;
@@ -197,7 +226,7 @@ int main(void)
 		   valb ? 'B' : 'b',
 		   valc ? 'C' : 'c');
 		   
-		printf("%s                                     \r", key_str);
+		// printf("%s                                     \r", key_str);
 
 		if (cfb_print(display, key_str, 0, 0)) {
 			printf("Failed to print a string\n");
