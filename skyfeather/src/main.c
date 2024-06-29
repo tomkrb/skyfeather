@@ -111,24 +111,32 @@ int init_screen(const struct device *display)
 	return 0;
 }
 
-void joy_feather(void)
-{}
+// void joy_feather(void)
+// {}
 
 void get_accelerometer(double *x, double *y, double *z)
 {
 		struct sensor_value accel_xyz[3];
+		struct sensor_value gyro_xyz[3];
+		struct sensor_value magn_xyz[3];
 
 		if (sensor_sample_fetch(lsm6dso) < 0) {
 			printf("LSM6DSO Sensor sample update error\n");
 		}
 		sensor_channel_get(lsm6dso, SENSOR_CHAN_ACCEL_XYZ, accel_xyz);
+		sensor_channel_get(lsm6dso, SENSOR_CHAN_GYRO_XYZ, gyro_xyz);
 
 		printf(
-		   "LSM6DSO: Acceleration (m.s-2): x: %.1f, y: %.1f, z: %.1f\n",
+		   "Acc: x: %4.1f, y: %4.1f, z: %4.1f\t",
 		   sensor_value_to_double(&accel_xyz[0]),
 		   sensor_value_to_double(&accel_xyz[1]),
 		   sensor_value_to_double(&accel_xyz[2]));
 
+		printf(
+		   "Gyro: x: %4.1f, y: %4.1f, z: %4.1f\t",
+		   sensor_value_to_double(&gyro_xyz[0]),
+		   sensor_value_to_double(&gyro_xyz[1]),
+		   sensor_value_to_double(&gyro_xyz[2]));
 		*x = sensor_value_to_double(&accel_xyz[0]);
 		*y = sensor_value_to_double(&accel_xyz[1]);
 		*z = sensor_value_to_double(&accel_xyz[2]);
@@ -137,6 +145,8 @@ void get_accelerometer(double *x, double *y, double *z)
 int main(void)
 {
 	const struct device *display;
+	const struct device *joy_feather;
+	
 	char output_str[64];
 
 	configure_button(&buttona);
@@ -144,6 +154,7 @@ int main(void)
 	configure_button(&buttonc);
 
 	display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+
 	if (!device_is_ready(display)) {
 		printf("Device %s not ready\n", display->name);
 		return 0;
@@ -151,13 +162,24 @@ int main(void)
 
 	init_screen(display);
 
+
 	if (!device_is_ready(lsm6dso)) {
 		printk("%s: device not ready.\n", lsm6dso->name);
 		// return 0;
 	}
 
+	joy_feather = DEVICE_DT_GET(DT_NODELABEL(joywing_seesaw));
+	if( !device_is_ready(joy_feather)) {
+		printk("%s: device not ready.\n", joy_feather->name);
+		// return 0;
+	}
+
+	printf("Now just loopin'...\n");
+	seesaw_temperature_get(joy_feather);
 
 	while (1) {
+
+		// cfb_framebuffer_clear(display, true);
 		double acc_x, acc_y, acc_z;
 		get_accelerometer(&acc_x, &acc_y, &acc_z);
 		snprintf(output_str, 63,
@@ -168,8 +190,6 @@ int main(void)
 		int valb = gpio_pin_get_dt(&buttonb);
 		int valc = gpio_pin_get_dt(&buttonc);
 
-		printf("read keys: %d %d %d\n", vala, valb, valc);
-
 		char key_str[64];
 		snprintf(key_str, 63,
 		   "%c %c %c 	  ",
@@ -177,7 +197,8 @@ int main(void)
 		   valb ? 'B' : 'b',
 		   valc ? 'C' : 'c');
 		   
-		// cfb_framebuffer_clear(display, true);
+		printf("%s                                     \r", key_str);
+
 		if (cfb_print(display, key_str, 0, 0)) {
 			printf("Failed to print a string\n");
 			continue;
@@ -186,12 +207,13 @@ int main(void)
 			printf("Failed to print a string\n");
 			continue;
 		}
+
 		
 		// printf("i = %d\n", i);
 		cfb_framebuffer_finalize(display);
 		k_sleep(K_MSEC(50));
 	}
-	
+
 	while (1) {
 		double acc_x, acc_y, acc_z;
 		get_accelerometer(&acc_x, &acc_y, &acc_z);
